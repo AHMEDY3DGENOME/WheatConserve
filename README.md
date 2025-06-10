@@ -98,7 +98,7 @@ Contributions, fixes, and extensions are welcome.
 
 ## 🌐 Try It Online
 
-> 🔗 [Live Demo on Streamlit Cloud](https://yourusername.streamlit.app)
+> 🔗 [Live Demo on Streamlit Cloud](https://wheatconserve-mamebvqtw6ckefdcds7rcn.streamlit.app/)
 
 ---
 
