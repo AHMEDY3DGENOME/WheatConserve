@@ -7,7 +7,7 @@ from io import BytesIO
 from Bio.Seq import Seq
 from modules import gc_content
 from modules import alignment, conserved, snp_analysis, pdf_report
-
+from modules import blast_analysis  # استيراد دالة BLAST
 
 def plot_conserved_regions(alignment_length, conserved_regions):
     fig, ax = plt.subplots(figsize=(10, 2))
@@ -27,13 +27,12 @@ def plot_conserved_regions(alignment_length, conserved_regions):
     plt.tight_layout()
     return fig
 
-
 st.set_page_config(layout="wide")
 st.title("🌾 WheatConserve - Conserved Region & SNP Analysis")
 
 st.markdown("""
 Upload multiple CDS sequences (FASTA format) from different wheat cultivars.  
-This tool performs multiple sequence alignment, highlights conserved regions, and detects SNPs.
+This tool performs multiple sequence alignment, highlights conserved regions, detects SNPs, and conducts BLAST analysis.
 """)
 
 uploaded_file = st.file_uploader("Upload a FASTA file with multiple sequences", type=["fasta", "fa", "txt"])
@@ -197,6 +196,17 @@ if uploaded_file is not None:
 
         else:
             st.info("No SNPs found.")
+
+        # إضافة خطوة BLAST
+        st.subheader("🔍 BLAST Analysis")
+        sequence_to_blast = str(alignment_result[0].seq)
+        blast_results = blast_analysis.run_blast(sequence_to_blast)
+
+        if blast_results:
+            for result in blast_results:
+                st.write(f"Title: {result['title']}, E-value: {result['e_value']}, Score: {result['score']}")
+        else:
+            st.warning("No results found in BLAST search.")
 
     except Exception as e:
         st.error(f"❌ Error during alignment: {str(e)}")
