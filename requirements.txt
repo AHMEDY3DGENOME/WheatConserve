@@ -1,0 +1,7 @@
+streamlit
+biopython
+matplotlib
+pandas
+openpyxl
+requests
+reportlab
