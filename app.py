@@ -197,7 +197,6 @@ if uploaded_file is not None:
         else:
             st.info("No SNPs found.")
 
-        # إضافة خطوة BLAST
         st.subheader("🔍 BLAST Analysis")
         sequence_to_blast = str(alignment_result[0].seq)
         blast_results = blast_analysis.run_blast(sequence_to_blast)
