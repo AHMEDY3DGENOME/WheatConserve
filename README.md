@@ -1,89 +1,107 @@
-# 🌾 WheatConserve - Conserved Region & SNP Analysis Tool
+# 🌾 WheatConserve – Conserved Regions, SNP & Primer Analysis for Wheat CDS
 
-WheatConserve is an interactive Streamlit-based application that enables genomic analysis of coding DNA sequences (CDS) from different wheat cultivars. It performs multiple sequence alignment, detects conserved regions and SNPs, generates primers, and allows functional annotation using BLAST.
+**WheatConserve** is an interactive bioinformatics tool for analyzing conserved regions and SNP variations across multiple wheat (Triticum aestivum) cultivars using CDS sequences. It also supports automatic primer design and BLAST-based functional annotation.
 
 ---
 
-## ✅ Features
+## 🚀 Features
 
-- 🔬 Multiple Sequence Alignment using ClustalW
-- 🧪 GC Content Analysis across all sequences
-- 🟩 Conserved Regions Detection with adjustable threshold
-- 🧬 SNP Detection and Filtering by allele variation
-- 🧫 Primer Design around filtered SNPs
-- 🔗 Functional Annotation via NCBI BLAST (for conserved regions or SNPs)
-- 📈 Visual Outputs: GC chart, conserved map, SNP scatter plot
-- 📄 Export Options: CSV, Excel, and PDF reports
+- ✅ Upload multi-sequence FASTA files for wheat cultivars
+- ✅ Perform multiple sequence alignment (MSA)
+- ✅ Detect **conserved regions** with user-defined threshold
+- ✅ Identify and filter **SNPs** (polymorphic positions)
+- ✅ Automatically generate **PCR primers** around SNPs
+- ✅ Visualize:
+  - GC content per sequence
+  - SNP distribution
+  - Conserved region maps
+- ✅ Annotate sequences using **NCBI BLAST**
+- ✅ Export results: CSV, Excel, PDF
+
+---
+
+## 🧬 Example Use Case
+
+Upload CDS sequences from different wheat lines. The tool:
+- Highlights conserved regions between them
+- Finds meaningful polymorphisms
+- Designs primers for genetic markers
+- Uses BLAST to predict gene/protein functions
+
+Great for wheat genome researchers, molecular biologists, and bioinformatics educators.
 
 ---
 
 ## 📦 Installation
 
-1. **Clone the repository**
 ```bash
-git clone https://github.com/your-repo/wheatconserve.git
+git clone https://github.com/AHMEDY3DGENOME/WheatConserve.git
 cd wheatconserve
-```
-
-2. **Create a virtual environment (optional but recommended)**
-```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-```
-
-3. **Install dependencies**
-```bash
 pip install -r requirements.txt
-```
-
-4. **Ensure ClustalW is installed** and accessible via your system's PATH.
-
----
-
-## 🚀 Running the App
-
-```bash
 streamlit run app.py
 ```
 
-Then open the link that appears in your terminal.
+---
+
+## 🖼️ Screenshots
+
+Add screenshots in `screenshots/` directory and link them here for better visualization.
 
 ---
 
-## 📂 Input Requirements
+## 📁 File Structure
 
-- Upload a multi-sequence FASTA file (.fasta / .fa / .txt) containing CDS sequences of wheat cultivars.
-
----
-
-## 📤 Output
-
-- GC Content table + chart
-- Conserved regions list + plot
-- SNPs with allele breakdown
-- Primers generated around SNPs
-- BLAST-based functional annotation
-- Downloadable CSV, Excel, and PDF summaries
-
----
-
-## 🌐 BLAST Note
-
-BLAST annotation uses the [NCBI BLAST API](https://blast.ncbi.nlm.nih.gov/Blast.cgi) and requires an active internet connection.
+```text
+├── app.py                  # Main Streamlit application
+├── modules/                # Analysis logic
+│   ├── alignment.py
+│   ├── gc_content.py
+│   ├── snp_analysis.py
+│   ├── conserved.py
+│   └── pdf_report.py
+├── requirements.txt        # Python dependencies
+├── README.md               # You are here
+└── example_data/           # Sample wheat FASTA sequences
+```
 
 ---
 
-## 👩‍🔬 For Researchers
+## 🧪 Input Format
 
-This tool is designed for use in:
-- Molecular biology
-- Wheat genomics
-- Genetic diversity studies
-- PCR assay design
-- Marker-assisted selection
+Multi-sequence FASTA with unique cultivar IDs:
+
+```fasta
+>cultivar_A
+ATGC...
+>cultivar_B
+ATGT...
+>cultivar_C
+ATGC...
+```
 
 ---
 
-## 📝 License
+## 📝 Citation / Acknowledgement
 
-MIT License © 2025 - Developed for research and educational purposes.
+If you use this tool in your research or teaching, please cite:
+
+> Developed by [AHMED YASSIN] as part of a wheat genomics and bioinformatics initiative.
+
+---
+
+## 📬 Feedback / Contributions
+
+Have an idea or issue? Open an issue or pull request.  
+Contributions, fixes, and extensions are welcome.
+
+---
+
+## 🌐 Try It Online
+
+> 🔗 [Live Demo on Streamlit Cloud](https://yourusername.streamlit.app)
+
+---
+
+## 🧠 License
+
+MIT License. Free to use, modify, and distribute.
