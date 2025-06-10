@@ -5,9 +5,21 @@ from matplotlib.patches import Rectangle
 import tempfile
 from io import BytesIO
 from Bio.Seq import Seq
-from modules import gc_content
-from modules import alignment, conserved, snp_analysis, pdf_report
-from modules import blast_analysis  # استيراد دالة BLAST
+import requests
+from Bio import AlignIO
+from Bio.Align import MultipleSeqAlignment
+from Bio.SeqRecord import SeqRecord
+from Bio.Seq import Seq
+from Bio.Align import AlignInfo
+from modules import gc_content, conserved, snp_analysis, pdf_report, blast_analysis
+from Bio import SeqIO
+
+def run_alignment(filepath):
+    records = list(SeqIO.parse(filepath, "fasta"))
+    max_len = max(len(record.seq) for record in records)
+    for record in records:
+        record.seq = record.seq + Seq("-") * (max_len - len(record.seq))
+    return MultipleSeqAlignment(records)
 
 def plot_conserved_regions(alignment_length, conserved_regions):
     fig, ax = plt.subplots(figsize=(10, 2))
@@ -32,21 +44,21 @@ st.title("🌾 WheatConserve - Conserved Region & SNP Analysis")
 
 st.markdown("""
 Upload multiple CDS sequences (FASTA format) from different wheat cultivars.  
-This tool performs multiple sequence alignment, highlights conserved regions, detects SNPs, and conducts BLAST analysis.
+This tool performs multiple sequence alignment, highlights conserved regions, detects SNPs, and allows functional annotation.
 """)
 
 uploaded_file = st.file_uploader("Upload a FASTA file with multiple sequences", type=["fasta", "fa", "txt"])
 
 if uploaded_file is not None:
-    with open("temp_input.fasta", "wb") as f:
-        f.write(uploaded_file.read())
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".fasta") as tmp_fasta:
+        tmp_fasta.write(uploaded_file.read())
+        tmp_fasta_path = tmp_fasta.name
 
     try:
         st.success("✅ File uploaded successfully. Running alignment...")
 
-        alignment_result = alignment.run_alignment("temp_input.fasta")
+        alignment_result = run_alignment(tmp_fasta_path)
 
-        # 🔬 GC Content Analysis
         st.subheader("🧪 GC Content Analysis")
         gc_results = gc_content.calculate_gc_content(alignment_result)
         df_gc = pd.DataFrame(gc_results)
@@ -63,16 +75,14 @@ if uploaded_file is not None:
         ax_gc.set_xticklabels(df_gc["id"], rotation=45, ha="right", fontsize=8)
         st.pyplot(fig_gc)
 
-        # 🧌 Alignment Summary
         st.subheader("📈 Alignment Summary")
         st.text(f"Number of sequences: {len(alignment_result)}")
         st.text(f"Alignment length: {alignment_result.get_alignment_length()}")
 
-        st.subheader("🧌 Aligned Sequences (First 300 bases)")
+        st.subheader("💌 Aligned Sequences (First 300 bases)")
         for record in alignment_result:
             st.text(f">{record.id}\n{record.seq[:300]}...")
 
-        # 🧃 SNP Analysis
         snps = snp_analysis.find_snps(alignment_result)
 
         st.subheader("👥 Conserved Regions")
@@ -80,41 +90,30 @@ if uploaded_file is not None:
         conserved_regions = conserved.find_conserved_regions(alignment_result, threshold)
 
         if conserved_regions:
-            for region in conserved_regions:
-                st.write(f"Region: {region[0]} - {region[1]}")
-
             df_conserved = pd.DataFrame(conserved_regions, columns=["Start", "End"])
-            csv_conserved = df_conserved.to_csv(index=False).encode("utf-8")
-            st.download_button("⬇️ Download Conserved Regions CSV", csv_conserved, "conserved_regions.csv", "text/csv")
-
+            st.dataframe(df_conserved)
             st.subheader("🗂️ Conserved Region Map")
             fig = plot_conserved_regions(alignment_result.get_alignment_length(), conserved_regions)
             st.pyplot(fig)
 
-            if st.button("📅 Generate PDF Report"):
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            st.subheader("📊 PDF Report")
+            if st.button("🗓️ Generate PDF Report"):
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_pdf:
                     summary = {
                         "Number of Sequences": len(alignment_result),
                         "Alignment Length": alignment_result.get_alignment_length(),
                         "Threshold": threshold
                     }
-                    plot_file = tmp.name.replace(".pdf", ".png")
+                    plot_file = tmp_pdf.name.replace(".pdf", ".png")
                     fig.savefig(plot_file)
+                    pdf_report.generate_pdf(tmp_pdf.name, summary, conserved_regions, snps, plot_file)
+                    with open(tmp_pdf.name, "rb") as pdf_file:
+                        st.download_button("Download PDF Report", data=pdf_file.read(), file_name="wheatconserve_report.pdf", mime="application/pdf")
 
-                    pdf_report.generate_pdf(tmp.name, summary, conserved_regions, snps, plot_file)
-
-                    with open(tmp.name, "rb") as pdf_file:
-                        st.download_button(
-                            label="📅 Download PDF Report",
-                            data=pdf_file.read(),
-                            file_name="wheatconserve_report.pdf",
-                            mime="application/pdf"
-                        )
         else:
             st.info("No conserved regions found at this threshold.")
 
-        # 🧃 SNPs Section
-        st.subheader("🧃 SNP Analysis")
+        st.subheader("🧋 SNP Analysis")
         if snps:
             st.write(f"🔍 Found {len(snps)} SNP positions before filtering.")
 
@@ -138,20 +137,16 @@ if uploaded_file is not None:
                 csv_snps = df_snps.to_csv(index=False).encode("utf-8")
                 st.download_button("⬇️ Download SNPs CSV", csv_snps, "snp_analysis_filtered.csv", "text/csv")
 
-                # SNPs to Excel
                 output = BytesIO()
                 with pd.ExcelWriter(output, engine="openpyxl") as writer:
                     df_snps.to_excel(writer, index=False, sheet_name="SNPs")
                 st.download_button("⬇️ Download SNPs Excel", data=output.getvalue(), file_name="snp_analysis_filtered.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
-                # Primer Design Section
                 st.subheader("🧪 Primer Design for SNPs")
                 reference_seq = str(alignment_result[0].seq).replace("-", "")
                 primer_results = []
-
                 primer_len = 20
                 flank = 100
-
                 for snp in filtered_snps[:10]:
                     pos = snp["position"]
                     if pos < flank or pos + flank > len(reference_seq):
@@ -159,18 +154,15 @@ if uploaded_file is not None:
                     flanking_seq = reference_seq[pos - flank: pos + flank + 1]
                     primer_fwd = flanking_seq[flank:flank + primer_len]
                     primer_rev = str(Seq(flanking_seq[flank - primer_len:flank]).reverse_complement())
-
                     primer_results.append({
                         "SNP Position": pos,
                         "Flanking Sequence": flanking_seq,
                         "Primer Forward": primer_fwd,
                         "Primer Reverse": primer_rev
                     })
-
                 if primer_results:
                     df_primers = pd.DataFrame(primer_results)
                     st.dataframe(df_primers)
-
                     output = BytesIO()
                     with pd.ExcelWriter(output, engine="openpyxl") as writer:
                         df_primers.to_excel(writer, index=False, sheet_name="Primers")
@@ -178,11 +170,9 @@ if uploaded_file is not None:
                 else:
                     st.info("❗ No suitable SNPs for primer design (too close to edges).")
 
-                # 🔹 SNP Distribution Plot (Improved)
                 st.subheader("📍 SNP Distribution Plot")
                 snp_positions = [snp["position"] for snp in filtered_snps]
                 allele_counts = [len(snp["variation"]) for snp in filtered_snps]
-
                 fig_snp_dist, ax_snp_dist = plt.subplots(figsize=(10, 2))
                 scatter = ax_snp_dist.scatter(snp_positions, [1]*len(snp_positions), c=allele_counts, cmap="viridis", s=20)
                 ax_snp_dist.set_yticks([])
@@ -190,15 +180,13 @@ if uploaded_file is not None:
                 ax_snp_dist.set_title("Distribution of Filtered SNPs (colored by allele count)")
                 plt.colorbar(scatter, ax=ax_snp_dist, label="# Alleles")
                 st.pyplot(fig_snp_dist)
-
             else:
                 st.warning("⚠️ No SNPs matched the selected allele filter.")
-
         else:
             st.info("No SNPs found.")
 
         st.subheader("🔍 BLAST Analysis")
-        sequence_to_blast = str(alignment_result[0].seq)
+        sequence_to_blast = str(alignment_result[0].seq).replace("-", "")
         blast_results = blast_analysis.run_blast(sequence_to_blast)
 
         if blast_results:
@@ -209,6 +197,5 @@ if uploaded_file is not None:
 
     except Exception as e:
         st.error(f"❌ Error during alignment: {str(e)}")
-
 else:
     st.warning("📂 Please upload a FASTA file to begin analysis.")
