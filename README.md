@@ -90,13 +90,38 @@ ATGC...
 
 ## Screenshots
 
-Screenshots will be added soon. Please check the `screenshots/` directory.
+### 🔹 Main Interface
+![Tool Interface](screenshots/Tool%20interface.png)
+
+### 🔹 Alignment Summary
+![Alignment Summary](screenshots/Alignment%20Summary.png)
+
+### 🔹 SNP Analysis
+![SNP Analysis](screenshots/SNP%20Analysis.png)
+
+### 🔹 SNP Distribution
+![SNP Distribution](screenshots/SNP%20Distribution%20polt.png)
+
+### 🔹 Conserved Region Summary
+![Conserved Summary](screenshots/conserved%20summary.png)
+
+### 🔹 Conserved Region Map
+![Conserved Region Map](screenshots/conserved%20Region%20map.png)
+
+### 🔹 GC Content Analysis
+![GC Analysis](screenshots/GC%20analysis.png)
+
+### 🔹 Primer Design
+![Primer Design](screenshots/Primer%20design.png)
+
+### 🔹 BLAST Output
+![BLAST Analysis](screenshots/blast%20analysis.png)
 
 ---
 
 ## Live Demo
 
-Try WheatConserve on Streamlit Cloud:
+Try WheatConserve on Streamlit Cloud:  
 https://wheatconserve-mamebvqtw6ckefdcds7rcn.streamlit.app/
 
 ---
